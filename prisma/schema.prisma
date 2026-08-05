@@ -1,0 +1,159 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid()) @map("_id")
+  role         String   // "STUDENT" | "FACULTY" | "ADMIN"
+  name         String
+  email        String   @unique
+  rollNo       String?  // roll_no for students, faculty_id for faculty
+  department   String?
+  section      String?
+  passwordHash String
+  mfaSecret    String?
+  createdAt    DateTime @default(now())
+
+  // Relations
+  testsCreated     Test[]           @relation("TestCreator")
+  submissions      Submission[]
+  gradesAssigned   Grade[]          @relation("GradeAssigner")
+  sentMessages     SupportMessage[] @relation("MessageSender")
+  receivedMessages SupportMessage[] @relation("MessageRecipient")
+  aiChatLogs       AiChatLog[]
+  auditLogs        AuditLog[]
+}
+
+model Test {
+  id              String   @id @default(uuid()) @map("_id")
+  title           String
+  subject         String
+  createdById     String
+  creator         User     @relation("TestCreator", fields: [createdById], references: [id])
+  difficulty      String   // "EASY" | "MEDIUM" | "HARD"
+  durationMinutes Int
+  opensAt         DateTime
+  closesAt        DateTime
+  status          String   // "DRAFT" | "PUBLISHED" | "CLOSED"
+  languagesAllowed String   // Comma-separated list e.g. "cpp,python,javascript"
+  createdAt       DateTime @default(now())
+
+  problems        Problem[]
+  grades          Grade[]
+}
+
+model Problem {
+  id          String   @id @default(uuid()) @map("_id")
+  testId      String
+  test        Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  title       String
+  statementMd String
+  constraints String
+  points      Int
+  orderIndex  Int
+  createdAt   DateTime @default(now())
+
+  testCases   TestCase[]
+  submissions Submission[]
+}
+
+model TestCase {
+  id             String   @id @default(uuid()) @map("_id")
+  problemId      String
+  problem        Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  input          String
+  expectedOutput String
+  isSample       Boolean  @default(false)
+  points         Int      @default(0)
+  generatedBy    String   @default("manual") // "manual" | "ai"
+  createdAt      DateTime @default(now())
+
+  results        SubmissionResult[]
+}
+
+model Submission {
+  id          String   @id @default(uuid()) @map("_id")
+  studentId   String
+  student     User     @relation(fields: [studentId], references: [id])
+  problemId   String
+  problem     Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  language    String   // "cpp" | "python" | "javascript"
+  sourceCode  String
+  status      String   // "QUEUED" | "RUNNING" | "COMPLETED" | "ERROR"
+  submittedAt DateTime @default(now())
+
+  results     SubmissionResult[]
+  grades      Grade[]
+}
+
+model SubmissionResult {
+  id           String     @id @default(uuid()) @map("_id")
+  submissionId String
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  testCaseId   String
+  testCase     TestCase   @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+  passed       Boolean
+  actualOutput String?
+  runtimeMs    Int?
+  memoryKb     Int?
+  errorType    String?    // "COMPILE_ERROR" | "RUNTIME_ERROR" | "TIME_LIMIT_EXCEEDED" | "WRONG_ANSWER"
+  createdAt    DateTime   @default(now())
+}
+
+model Grade {
+  id           String     @id @default(uuid()) @map("_id")
+  submissionId String?    @unique
+  submission   Submission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  studentId    String
+  testId       String
+  test         Test       @relation(fields: [testId], references: [id], onDelete: Cascade)
+  autoScore    Int
+  finalMarks   Int
+  gradedById   String?
+  gradedBy     User?      @relation("GradeAssigner", fields: [gradedById], references: [id])
+  gradedAt     DateTime?
+  status       String     @default("PENDING") // "PENDING" | "GRADED"
+  createdAt    DateTime   @default(now())
+}
+
+model SupportMessage {
+  id          String   @id @default(uuid()) @map("_id")
+  threadId    String   // conversation key
+  senderId    String
+  sender      User     @relation("MessageSender", fields: [senderId], references: [id])
+  recipientId String
+  recipient   User     @relation("MessageRecipient", fields: [recipientId], references: [id])
+  body        String
+  createdAt   DateTime @default(now())
+  readAt      DateTime?
+}
+
+model AiChatLog {
+  id           String   @id @default(uuid()) @map("_id")
+  facultyId    String
+  faculty      User     @relation(fields: [facultyId], references: [id])
+  prompt       String
+  responseJson String
+  inserted     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+model AuditLog {
+  id           String   @id @default(uuid()) @map("_id")
+  actorId      String?
+  actor        User?    @relation(fields: [actorId], references: [id])
+  action       String   // e.g. "LOGIN", "SUBMIT_CODE", "GRADE_OVERRIDE"
+  entity       String   // e.g. "USER", "SUBMISSION", "GRADE"
+  entityId     String?
+  ipAddress    String?
+  metadataJson String?
+  createdAt    DateTime @default(now())
+}

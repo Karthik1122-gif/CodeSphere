@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CodeSphere | Autonomous Coding Assessment Platform
 
-## Getting Started
+CodeSphere is a next-generation secure online judge and coding assessment platform designed for autonomous engineering colleges. It allows faculty members to create, run, and auto-grade coding tests in isolated sandboxes.
 
-First, run the development server:
+---
 
+## 🚀 Key Features
+
+* **Multi-Language Compiler**: Ephemeral process execution for C, C++17, Python 3, and JavaScript/Node.
+* **Isolated Sandboxing**: Secure local sandboxing enforcing runtime timeouts and memory boundaries.
+* **Dynamic Analytics Dashboard**: Faculty tracking of class averages, pass rates, and submission telemetries.
+* **AI Question Assistant**: Integrates an assistant to draft questions and compile inputs in the test editor.
+* **ISO 27001 & NBA Alignment**: Immutable audit trails and session tracking logs exportable for compliance.
+
+---
+
+## 🛠️ Tech Stack
+
+* **Frontend & Backend**: Next.js 16 (App Router), React 19, TailwindCSS v4
+* **Database ORM**: Prisma ORM v6
+* **Database**: MongoDB Atlas (Replica Set)
+* **IDE Editor**: Monaco Editor (VS Code core engine)
+
+---
+
+## 💻 Local Setup & Installation
+
+Follow these steps to run CodeSphere on your computer:
+
+### 1. Prerequisites
+Ensure you have **Node.js** (v18 or higher) and a running **MongoDB cluster** (replica set enabled, like a free MongoDB Atlas tier).
+
+### 2. Configure Environment Variables
+Create a file named `.env` in the root folder of the project, copying the template from `.env.example`:
+```env
+DATABASE_URL="mongodb+srv://<username>:<password>@<cluster-url>/CodeSphere?appName=Cluster1"
+JWT_SECRET="your-custom-jwt-secret-key-here"
+```
+*(Make sure to URL-encode any special characters in your password, e.g., replace `@` with `%40`).*
+
+### 3. Install Dependencies
+Run the package installation:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 4. Setup Database
+Synchronize the Prisma schema structure with MongoDB (creates collections and indices) and generate the Prisma Client:
+```bash
+npx prisma db push
+npx prisma generate
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 5. Seed Initial Data
+Run the seeding script to populate the database with mock accounts, problems, and test cases:
+```bash
+npx tsx prisma/seed.ts
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 6. Start Development Server
+Launch the development server:
+```bash
+npm run dev
+```
+Open **`http://localhost:3000`** in your browser to view the application.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🔑 Seeding / Login Credentials
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+After running the seed script, you can log in using these preset credentials:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 👤 Student Dashboard
+* **Email**: `student@hitam.edu.in`
+* **Password**: `Password123`
+* **Role**: `STUDENT`
 
-## Deploy on Vercel
+### 🎓 Faculty Dashboard
+* **Email**: `faculty@hitam.edu.in`
+* **Password**: `Password123`
+* **Role**: `FACULTY`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 🔑 System Admin Console
+* **Email**: `admin@hitam.edu.in`
+* **Password**: `Password123`
+* **Role**: `ADMIN`
